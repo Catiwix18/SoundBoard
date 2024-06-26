@@ -14,10 +14,13 @@ class SoundViewController: UIViewController {
     @IBOutlet weak var reproducirButton: UIButton!
     @IBOutlet weak var nombreTextField: UITextField!
     @IBOutlet weak var agregarButton: UIButton!
+    @IBOutlet weak var tiempoLabel: UILabel!
     
     var grabarAudio:AVAudioRecorder?
     var reproducirAudio: AVAudioPlayer?
     var audioURL: URL?
+    var timer: Timer?
+    var recordingTime: TimeInterval = 0.0
     
     
     override func viewDidLoad() {
@@ -64,6 +67,8 @@ class SoundViewController: UIViewController {
         if grabarAudio!.isRecording{
             //detener la grabacion
             grabarAudio?.stop()
+            // Detener el timer
+            timer?.invalidate()
             //cambiar texto del boton grabar
             grabarButton.setTitle("GRABAR", for: .normal)
             reproducirButton.isEnabled = true
@@ -71,11 +76,25 @@ class SoundViewController: UIViewController {
         }else{
             //empezar a grabar
             grabarAudio?.record()
+            //Iniciar el timer
+            recordingTime = 0.0
+            timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                self.recordingTime += 1.0
+                self.tiempoLabel.text = self.formatTimeInterval(self.recordingTime)
+            }
             //cambiar el texto del boton grabar a detener
             grabarButton.setTitle("DETENER", for: .normal)
             reproducirButton.isEnabled = false
+            agregarButton.isEnabled = false
         }
     }
+    
+    func formatTimeInterval(_ timeInterval: TimeInterval) -> String {
+        let minutes = Int(timeInterval) / 60
+        let seconds = Int(timeInterval) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
     
     @IBAction func reproducirTapped(_ sender: Any) {
         do {
@@ -84,11 +103,13 @@ class SoundViewController: UIViewController {
             print("Reproduciendo")
         } catch{}
     }
+    
     @IBAction func agregarTapped(_ sender: Any) {
         let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-        let grabacion = Grabacion(context:context)
+        let grabacion = Grabacion(context: context)
         grabacion.nombre = nombreTextField.text
         grabacion.audio = NSData(contentsOf: audioURL!)! as Data
+        grabacion.duracion = recordingTime // Guardar la duración de la grabación
         (UIApplication.shared.delegate as! AppDelegate).saveContext()
         navigationController!.popViewController(animated: true)
     }

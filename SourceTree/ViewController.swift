@@ -35,9 +35,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
         let grabacion = grabaciones[indexPath.row]
         cell.textLabel?.text = grabacion.nombre
+        cell.detailTextLabel?.text = formatTimeInterval(grabacion.duracion)
         return cell
     }
     
@@ -49,6 +50,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }catch{}
         tablaGrabaciones.deselectRow(at: indexPath, animated: true)
     }
+    
+    func formatTimeInterval(_ timeInterval: TimeInterval) -> String {
+            let minutes = Int(timeInterval) / 60
+            let seconds = Int(timeInterval) % 60
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
     
     func tableView(_ tableView: UITableView, commit editingStyle:UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath){
         if editingStyle == .delete{
